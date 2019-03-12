@@ -67,13 +67,14 @@ cluster:
 client:
   name: esclient
   replicas: 2
-  serviceType: ClusterIP
+  serviceType: NodePort
   loadBalancerIP: {}
   loadBalancerSourceRanges: {}
 ## (dict) If specified, apply these annotations to the client service
 #  serviceAnnotations:
 #    example: client-svc-foo
-  heapSize: "512m"
+#  250m cpu = 0.25 cpu
+  heapSize: "128m"
   # additionalJavaOpts: "-XX:MaxRAM=512m"
   antiAffinity: "hard"
   nodeAffinity: {}
@@ -88,11 +89,11 @@ client:
     #   memory: "128Mi"
   resources:
     limits:
-      cpu: "1"
-      # memory: "1024Mi"
+      # cpu: "100m"
+      # memory: "512Mi"
     requests:
       cpu: "25m"
-      memory: "512Mi"
+      memory: "256Mi"
   priorityClassName: ""
   ## (dict) If specified, apply these annotations to each client Pod
   # podAnnotations:
@@ -117,8 +118,8 @@ client:
 master:
   name: esmaster
   exposeHttp: false
-  replicas: 3
-  heapSize: "512m"
+  replicas: 2
+  heapSize: "256m"
   # additionalJavaOpts: "-XX:MaxRAM=512m"
   persistence:
     enabled: true
@@ -144,21 +145,21 @@ master:
     #   memory: "128Mi"
   resources:
     limits:
-      cpu: "1"
+      # cpu: "1"
       # memory: "1024Mi"
     requests:
       cpu: "25m"
-      memory: "512Mi"
+      memory: "256Mi"
   priorityClassName: ""
   ## (dict) If specified, apply these annotations to each master Pod
   # podAnnotations:
   #   example: master-foo
   podDisruptionBudget:
     enabled: false
-    minAvailable: 2  # Same as `cluster.env.MINIMUM_MASTER_NODES`
+    minAvailable: 1  # Same as `cluster.env.MINIMUM_MASTER_NODES`
     # maxUnavailable: 1
   updateStrategy:
-    type: OnDelete
+    type: RollingUpdate
 
 data:
   name: esdata
@@ -191,11 +192,11 @@ data:
     #   memory: "128Mi"
   resources:
     limits:
-      cpu: "2"
+      # cpu: "2"
       # memory: "2048Mi"
     requests:
       cpu: "25m"
-      memory: "1536Mi"
+      memory: "1152Mi"
   priorityClassName: ""
   ## (dict) If specified, apply these annotations to each data Pod
   # podAnnotations:
@@ -205,7 +206,7 @@ data:
     # minAvailable: 1
     maxUnavailable: 1
   updateStrategy:
-    type: OnDelete
+    type: RollingUpdate
   hooks:  # post-start and pre-stop hooks
     drain:  # drain the node before stopping it and re-integrate it into the cluster after start
       enabled: true
