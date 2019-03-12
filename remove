@@ -1,0 +1,3 @@
+helm delete es-release
+kubectl delete pvc -l release=es-release
+helm del --purge es-release

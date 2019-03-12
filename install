@@ -1,0 +1,18 @@
+helm install stable/elasticsearch --name es-release -f es-values.yaml
+
+NOTES:
+The elasticsearch cluster has been installed.
+
+Elasticsearch can be accessed:
+
+  * Within your cluster, at the following DNS name at port 9200:
+
+    es-release-elasticsearch-esclient.default.svc
+
+  * From outside the cluster, run these commands in the same shell:
+
+    export POD_NAME=$(kubectl get pods --namespace default -l "app=elasticsearch,component=esclient,release=es-release" -o jsonpath="{.items[0].metadata.name}")
+    echo "Visit http://127.0.0.1:9200 to use Elasticsearch"
+    kubectl port-forward --namespace default $POD_NAME 9200:9200
+
+
