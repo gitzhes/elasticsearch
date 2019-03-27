@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: http-proxy-config
+  namespace: default
+data:
+  http_proxy: http://10.32.2.66:3128/
+  https_proxy: http://10.32.2.66:3128/
+  no_proxy:  "keycloak-release-http,localhost,127.0.0.1,10.32.2.68,10.32.2.69,10.32.2.70,10.32.2.71,10.34.0.20,10.33.0.130,10.33.0.132,10.33.0.133,192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"

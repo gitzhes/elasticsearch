@@ -15,4 +15,4 @@ Elasticsearch can be accessed:
     echo "Visit http://127.0.0.1:9200 to use Elasticsearch"
     kubectl port-forward --namespace default $POD_NAME 9200:9200
 
-
+helm upgrade -f es-values.yaml es-release stable/elasticsearch

@@ -1,0 +1,308 @@
+image:
+  repository: "docker.elastic.co/kibana/kibana"
+  tag: "6.6.1"
+  pullPolicy: "IfNotPresent"
+
+commandline:
+  args: []
+  #args: [] 
+  #  - "echo 10.105.142.203 lab-dev.oneconnectft.com.sg >> /etc/hosts"
+
+env: 
+  # All Kibana configuration options are adjustable via env vars.
+  # To adjust a config option to an env var uppercase + replace `.` with `_`
+  # Ref: https://www.elastic.co/guide/en/kibana/current/settings.html
+  #
+  ELASTICSEARCH_URL: http://es-release-elasticsearch-esclient:9200
+  SERVER_PORT: 5601
+  # LOGGING_VERBOSE: "true"
+  # SERVER_DEFAULTROUTE: "/app/kibana"
+  http_proxy: http://10.32.2.66:3128/
+  https_proxy: http://10.32.2.66:3128/
+  no_proxy:  "keycloak-release-http,localhost,127.0.0.1,10.32.2.68,10.32.2.69,10.32.2.70,10.32.2.71,10.34.0.20,10.33.0.130,10.33.0.132,10.33.0.133,192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
+
+
+files:
+  kibana.yml:
+    ## Default Kibana configuration from kibana-docker.
+    server.name: kibana
+    server.host: "0"
+    elasticsearch.url: http://es-release-elasticsearch-esclient:9200
+    xpack.security.enabled: false
+    ## Custom config properties below
+    ## Ref: https://www.elastic.co/guide/en/kibana/current/settings.html
+    server.port: 5601
+    #logging.verbose: "true"
+    # server.defaultRoute: "/app/kibana"
+
+    # v14 and above: Enable OpenID authentication
+    #searchguard.auth.type: "openid"
+
+    # the IdP metadata endpoint
+    #searchguard.openid.connect_url: "http://205.252.40.104/auth/realms/elk/.well-known/openid-configuration"
+    # searchguard.openid.connect_url: "http://keycloak-release-http/auth/realms/elk/.well-known/openid-configuration"
+    #searchguard.openid.base_redirect_url: "http://205.252.40.104:5601/app/kibana"
+    # the ID of the OpenID Connect client in your IdP
+    #searchguard.openid.client_id: "kibana"
+
+    # the client secret of the OpenID Connect client 7900831c-40fb-4c37-9362-ece70f6427ce
+    #searchguard.openid.client_secret: "7900831c-40fb-4c37-9362-ece70f6427ce"
+
+    # optional: the scope of the identity token
+    # default: 'openid profile email address phone'
+    #searchguard.openid.scope: "profile email"
+
+    # optional: the HTTP header name of the JWT. Default: 'Authorization'
+    #searchguard.openid.header: "Authorization"
+    #searchguard.openid.header: "Access-Control-Allow-Origin: *"
+    ##searchguard.openid.header: "Access-Control-Allow-Methods: GET, POST, OPTIONS"
+    #searchguard.openid.header: "Access-Control-Allow-Methods: DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range"
+    #searchguard.openid.header: "Access-Control-Expose-Headers: Content-Length,Content-Range"    
+    ##searchguard.openid.header: "Access-Control-Max-Age: 1728000"
+    #searchguard.openid.header: "Access-Control-Allow-Credentials: true"
+
+    # optional: the logout URL of your IdP
+    # Only necessary if your IdP does not publish the logout url
+    # in the metadata
+    #searchguard.cookie.password: "abcdefghijklmnopqrstuvwxyz20191231"
+
+deployment:
+  annotations: {}
+
+service:
+  type: NodePort
+  # clusterIP: None
+  # portName: kibana-svc
+  externalPort: 5601
+  internalPort: 5601
+  # To be used with authProxyEnabled and a proxy extraContainer
+  authProxyPort: 5602
+  ## External IP addresses of service
+  ## Default: nil
+  ##
+  # externalIPs:
+  # - 192.168.0.1
+  #
+  ## LoadBalancer IP if service.type is LoadBalancer
+  ## Default: nil
+  ##
+  # loadBalancerIP: 10.2.2.2
+  annotations: {}
+    # Annotation example: setup ssl with aws cert when service.type is LoadBalancer
+    # service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:EXAMPLE_CERT
+  labels: {}
+    ## Label example: show service URL in `kubectl cluster-info`
+    # kubernetes.io/cluster-service: "true"
+  ## Limit load balancer source ips to list of CIDRs (where available)
+  # loadBalancerSourceRanges: []
+  selector: {}
+
+ingress:
+  enabled: false
+  # hosts:
+    # - kibana.localhost.localdomain
+    # - localhost.localdomain/kibana
+  # annotations:
+  #   kubernetes.io/ingress.class: nginx
+  #   kubernetes.io/tls-acme: "true"
+  # tls:
+    # - secretName: chart-example-tls
+    #   hosts:
+    #     - chart-example.local
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  # If set and create is false, the service account must be existing
+  name: kibana
+
+livenessProbe:
+  enabled: false
+  initialDelaySeconds: 30
+  timeoutSeconds: 10
+
+readinessProbe:
+  enabled: false
+  initialDelaySeconds: 30
+  timeoutSeconds: 10
+  periodSeconds: 10
+  successThreshold: 5
+
+# Enable an authproxy. Specify container in extraContainers
+authProxyEnabled: true
+
+extraContainers: |
+  - name: proxy
+    image: quay.io/gambol99/keycloak-proxy:latest
+  #  # command: ["/bin/sh","-c"]
+    #lifecycle:
+     # postStart:
+      #  exec:
+       #   command:
+        #    - "sh" 
+         #   - "-c" 
+          #  - "echo 10.105.142.203 lab-dev.oneconnectft.com.sg >> /etc/hosts"
+    env:
+  #  #- name: HTTP_PROXY
+    #  value: "http://10.32.2.66:3128/"
+    #- name: HTTPS_PROXY
+    #  value: "http://10.32.2.66:3128/"
+    #  - name: http_proxy
+    #    value: "http://10.32.2.66:3128/"
+    #  - name: https_proxy
+    #    value: "http://10.32.2.66:3128/"
+    #  - name: no_proxy
+    #    value: "keycloak-release-http,localhost,127.0.0.1,10.32.2.68,10.32.2.69,10.32.2.70,10.32.2.71,10.34.0.20,10.33.0.130,10.33.0.132,10.33.0.133,192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
+    args:
+  #    - --discovery-url=http://keycloak-release-http/auth/realms/elk
+      - --discovery-url=http://lab-dev.oneconnectft.com.sg/auth/realms/elk
+      - --client-id=kibana
+      - --client-secret=7900831c-40fb-4c37-9362-ece70f6427ce
+      - --listen=0.0.0.0:5602
+      - --secure-cookie=false # enforces the cookie to be secure, default to true
+      - --http-only-cookie=true 
+      - --enable-session-cookies=false
+      - --redirection-url=http://lab-dev.oneconnectft.com.sg:5601
+      - --upstream-url=http://127.0.0.1:5601
+      - --enable-refresh-tokens=true
+      - --enable-default-deny=true
+      - --encryption-key=kYp3s5v8y/B?E(H+MbQeThWmZq4t7w9z
+      # - --scopes=vpn-user # kYp3s5v8y/B?E(H+MbQeThWmZq4t7w9z
+      # - --verbose=true
+      #- --cors-origins=*
+      #- --cors-methods=GET, POST, OPTIONS
+      #- --cors-headers=DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range
+      #- --cors-exposed-headers=Content-Length,Content-Range
+      #- --cors-max-age=1728000s
+      #- --enabled-proxy-protocol=true
+      #- --resources=uri=/auth/reamls/elk|white-listed=true
+      #- --resources=uri=/app/kibana
+      - --openid-provider-proxy=http://10.32.2.66:3128
+      #- --revocation-url=/oauth/logout?redirect=http://lab-dev.oneconnectft.com.sg:5601
+    ports:
+      - name: web
+        containerPort: 9090
+
+extraVolumeMounts: []
+
+extraVolumes: []
+
+resources: 
+  # limits:
+  #   cpu: 100m
+  #   memory: 300Mi
+  requests:
+     cpu: 100m
+     memory: 300Mi
+
+priorityClassName: ""
+
+# Affinity for pod assignment
+# Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+# affinity: {}
+
+# Tolerations for pod assignment
+# Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: []
+
+# Node labels for pod assignment
+# Ref: https://kubernetes.io/docs/user-guide/node-selection/
+nodeSelector:
+  kubernetes.io/hostname: k8sworker03
+
+podAnnotations: {}
+replicaCount: 1
+revisionHistoryLimit: 3
+
+# Custom labels for pod assignment
+podLabels: {}
+
+# To export a dashboard from a running Kibana 6.3.x use:
+# curl --user <username>:<password> -XGET https://kibana.yourdomain.com:5601/api/kibana/dashboards/export?dashboard=<some-dashboard-uuid> > my-dashboard.json
+# A dashboard is defined by a name and a string with the json payload or the download url
+dashboardImport:
+  timeout: 60
+  xpackauth:
+    enabled: false
+    username: myuser
+    password: mypass
+  dashboards: {}
+    # k8s: https://raw.githubusercontent.com/monotek/kibana-dashboards/master/k8s-fluentd-elasticsearch.json
+
+# List of plugins to install using initContainer
+# NOTE : We notice that lower resource constraints given to the chart + plugins are likely not going to work well.
+plugins:
+  # set to true to enable plugins installation
+  enabled: true
+  # set to true to remove all kibana plugins before installation
+  reset: true
+  # Use <plugin_name,version,url> to add/upgrade plugin
+  values:
+    # - elastalert-kibana-plugin,1.0.1,https://github.com/bitsensor/elastalert-kibana-plugin/releases/download/1.0.1/elastalert-kibana-plugin-1.0.1-6.4.2.zip
+    # - logtrail,0.1.31,https://github.com/sivasamyk/logtrail/releases/download/v0.1.31/logtrail-6.6.0-0.1.31.zip
+    # - other_plugin
+    # - search-guard-kibana-plugin,6.6.1-18.1,https://search.maven.org/remotecontent?filepath=com/floragunn/search-guard-kibana-plugin/6.6.1-18.1/search-guard-kibana-plugin-6.6.1-18.1.zip
+
+persistentVolumeClaim:
+  # set to true to use pvc
+  enabled: true
+  # set to true to use you own pvc
+  existingClaim: false
+  annotations: {}
+
+  accessModes:
+    - ReadWriteOnce
+  size: "5Gi"
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  storageClass: "kb-storage"
+
+# default security context
+securityContext:
+  enabled: false
+  allowPrivilegeEscalation: false
+  runAsUser: 1000
+  fsGroup: 2000
+
+extraConfigMapMounts: []
+  # - name: logtrail-configs
+  #   configMap: kibana-logtrail
+  #   mountPath: /usr/share/kibana/plugins/logtrail/logtrail.json
+  #   subPath: logtrail.json
+
+# Add your own init container or uncomment and modify the given example.
+initContainers: 
+  #init-myservice:
+  #  image: busybox
+  #  command: ["sh", "-c", "echo 10.105.142.203 lab-dev.oneconnectft.com.sg >> /etc/hosts"]
+  #  env:
+  #    - name: http_proxy
+  #      value: "http://10.32.2.66:3128/"
+  #    - name: https_proxy
+  #      value: "http://10.32.2.66:3128/"
+  #    - name: no_proxy
+  #      value: "keycloak-release-http,localhost,127.0.0.1,10.32.2.68,10.32.2.69,10.32.2.70,10.32.2.71,10.34.0.20,10.33.0.130,10.33.0.132,10.33.0.133,192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
+  ## Don't start kibana till Elasticsearch is reachable.
+  ## Ensure that it is available at http://elasticsearch:9200
+  ##
+  # es-check:  # <- will be used as container name
+  #   image: "appropriate/curl:latest"
+  #   imagePullPolicy: "IfNotPresent"
+  #   command:
+  #     - "/bin/sh"
+  #     - "-c"
+  #     - |
+  #       is_down=true
+  #       while "$is_down"; do
+  #         if curl -sSf --fail-early --connect-timeout 5 http://elasticsearch:9200; then
+  #           is_down=false
+  #         else
+  #           sleep 5
+  #         fi
+  #       done

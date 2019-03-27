@@ -1,0 +1,5 @@
+export ELASTICSEARCH_URL=http://$(kubectl get svc -n default | grep 'elastic.*client' | head -n 1 | awk '{print $1}'):9200
+helm install stable/kibana --name kibana-v1 \
+  -f kb-values.yaml
+
+curl -L http://10.32.2.68:32105
